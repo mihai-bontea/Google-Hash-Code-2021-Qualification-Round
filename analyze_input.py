@@ -1,4 +1,4 @@
-input_files = ["a.txt", "b.txt", "c.txt", "d.txt.", "e.txt", "f.txt"]
+input_files = ["a.txt", "b.txt", "c.txt", "d.txt", "e.txt", "f.txt"]
 
 class Car:
     def __init__(self, info_str):
@@ -87,11 +87,4 @@ for input_file in input_files:
         for component in connected_components:
               print(str(len(component.cars)), end=" ")
         print("\n")
-        
     
-                        
-        
-
-        
-        
-        
