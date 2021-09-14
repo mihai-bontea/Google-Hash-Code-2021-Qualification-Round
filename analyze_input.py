@@ -43,16 +43,27 @@ for input_file in input_files:
 
         cars = []
         invalid_cars = 0
+        no_wait = 0
         # Reading the path each car follows, counting cars that can't finish, if any
         for _ in range(nr_cars):
             info_str = fin.readline()
             new_car = Car(info_str)
-            if new_car.min_finish_time(street_len) <= total_time:
+            if new_car.min_finish_time(street_len) < total_time:
                 cars.append(new_car)
+            elif new_car.min_finish_time(street_len) == total_time:
+                cars.append(new_car)
+                no_wait += 1
             else:
                 invalid_cars += 1
 
-        print("\tWe have " + str(invalid_cars) + " invalid cars")
+        print("\tWe have " + str(invalid_cars) + " invalid cars and " + str(no_wait) + " cars that need perfect time") 
+
+        # Counting the number of unused streets, if any
+        streets = set()
+        for car in cars:
+            for street in car.streets:
+                streets.add(street)
+        print("\tWe have " + str(nr_streets - len(streets)) + " unused streets out of " + str(nr_streets))
 
         # Determining the number of connected components in the graph formed by the paths that the cars follow
         connected_components = []
