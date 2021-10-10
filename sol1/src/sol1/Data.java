@@ -1,6 +1,8 @@
 package sol1;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -77,11 +79,25 @@ public class Data {
 				if (hasCommonIntersect == true)
 					break;
 			}
-			if (hasCommonIntersect == false) {
+			if (hasCommonIntersect == false)
 				connectedComponents.add(new Component(car));
-			}
 		}
 		
 		System.out.printf("We have %d connected components.\n", connectedComponents.size());
-	}	
+	}
+	
+	public void writeToFile(String filename, Map<Integer, List<OutputPair>> outputInfo) throws IOException {
+		File outFile = new File(filename);
+		FileWriter fw = new FileWriter(outFile);
+		
+		fw.write(String.format("%d\n", outputInfo.size()));
+		for (int key : outputInfo.keySet()) {
+			fw.write(String.format("%d\n%d\n", key, outputInfo.get(key).size()));
+			
+			for (OutputPair op : outputInfo.get(key)) {
+				fw.write(String.format("%s\n", op.toString()));
+			}
+		}
+		fw.close();
+	}
 }
