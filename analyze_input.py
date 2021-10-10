@@ -7,13 +7,6 @@ class Street:
         self.name = info[2]
         self.length = info[3]
 
-
-def get_street_by_name(str_list, name):
-    for street in str_list:
-        if street.name == name:
-            return street
-    return None
-
   
 class Car:
     def __init__(self, info_str, streets):
