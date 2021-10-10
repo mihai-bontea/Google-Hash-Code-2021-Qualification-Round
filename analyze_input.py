@@ -63,6 +63,27 @@ for input_file in input_files:
                 used_streets.add(street.name)
         print("\tWe have " + str(nr_streets - len(used_streets)) + " unused streets out of " + str(nr_streets))
 
+        # Counting the number of independent intersections, if any
+        pre_last_streets = set()
+        for car in cars:
+            if len(car.streets) >= 2:
+                pre_last_streets.add(car.streets[-2])
+        
+        indep_intersect = set()
+        for street in pre_last_streets:
+            indep = True
+            for car in cars:
+                try:
+                    idx = car.streets.index(street)
+                    if len(car.streets) - idx > 2:
+                        indep = False
+                        break
+                except ValueError as e:
+                    pass
+            if indep:
+                indep_intersect.add(street.intersect[1])
+        print("\tWe have " + str(len(indep_intersect)) + " independent intersections out of " + str(nr_intersect))
+
         # Determining the number of connected components in the graph formed by the paths that the cars follow
         connected_components = []
         for car in cars:
