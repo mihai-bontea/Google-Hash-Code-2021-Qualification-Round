@@ -57,6 +57,7 @@ class Intersection:
         self.light_schedule = light_schedule
         # Computing the length of a cycle
         self.cycle_time = sum(map(lambda x: x[1], self.light_schedule))
+        assert(self.cycle_time != 0)
         # Mapping each second of a cycle to a street
         self.street_at_second = {}
         current_time = 0
@@ -87,7 +88,7 @@ class Intersection:
         else:
             print("Street " + street_name + " receives no green light ever, car won't finish!")
 
-solutions = ["sol1"]
+solutions = ["sol1", "sol2"]
 input_files = ["a.txt", "b.txt", "c.txt", "d.txt", "e.txt", "f.txt"]          
 for solution in solutions:
     print("For " + solution + ":")
