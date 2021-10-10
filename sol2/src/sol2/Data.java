@@ -69,7 +69,8 @@ public class Data {
 		for (Car car : cars) {
 			boolean hasCommonIntersect = false;
 			
-			for (Street street : car.streets) {
+			for (int street_index = 0; street_index < car.streets.size() - 1; ++street_index) {
+				Street street = car.streets.get(street_index);
 				for (Component component : connectedComponents) {
 					if (component.containsIntersect(street.endIntersect)) {
 						hasCommonIntersect = true;

@@ -74,7 +74,7 @@ for input_file in input_files:
         connected_components = []
         for car in cars:
             has_common_intersect = False
-            for street in car.streets:
+            for street in car.streets[:-1]:
                 for component in connected_components:
                     if street.intersect[1] in component.intersect:
                         has_common_intersect = True
