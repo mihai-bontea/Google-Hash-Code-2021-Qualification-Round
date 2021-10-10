@@ -9,7 +9,7 @@ public class Task implements Runnable{
 	public final Data data;
 	public final Component component;
 	public final Map<Integer, List<OutputPair>> outputInfo;
-	public static final double MULTI = 0.75;
+	public static final double MULTI = 0.5;
 	
 	public Task(Data data, Component component, Map<Integer, List<OutputPair>> outputInfo) {
 		this.data = data;

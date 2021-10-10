@@ -160,17 +160,20 @@ for solution in solutions:
             # Calculating the score
             score_for_file = 0
             cars_finished = 0
+            bonus_time = 0
             for car in cars:
                 if car.finished:
                     cars_finished += 1
                     assert(total_time >= car.time_finished)
                     score_for_file += finish_bonus
-                    score_for_file += (total_time - car.time_finished)                   
+                    score_for_file += (total_time - car.time_finished)
+                    bonus_time += (total_time - car.time_finished)                   
 
             # Displaying score for file, and nr of cars that finished
             assert(score_for_file >= cars_finished * finish_bonus)
             print("\t\tScore = " + str(score_for_file))
             print("\t\tCars finished: " + str(cars_finished) + "/" + str(len(cars)))
+            print("\t\tBonus time: " + str(bonus_time))
 
             score_for_solution += score_for_file
     
