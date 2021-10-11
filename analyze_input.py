@@ -64,6 +64,8 @@ for input_file in input_files:
         print("\tWe have " + str(nr_streets - len(used_streets)) + " unused streets out of " + str(nr_streets))
 
         # Counting the number of independent intersections, if any
+        # independent intersections = intersections which only lead to other intersections which are final
+        # So, modifying an independent intersection has no side effects on the time cars arrive at other intersections
         pre_last_streets = set()
         for car in cars:
             if len(car.streets) >= 2:
@@ -83,6 +85,29 @@ for input_file in input_files:
             if indep:
                 indep_intersect.add(street.intersect[1])
         print("\tWe have " + str(len(indep_intersect)) + " independent intersections out of " + str(nr_intersect))
+
+        # Counting the number of starting intersections, if any
+        # starting intersections = intersections from which cars start but besides that, no other car has passage through them
+        # (except as last intersection for which there is no queueing)
+        # So, the time cars arrive at a starting intersection is not affected by other intersections' schedules
+        starting_streets = set()
+        for car in cars:
+            starting_streets.add(car.streets[0])
+
+        starting_intersect = set()
+        for street in starting_streets:
+            starting_only = True
+            for car in cars:
+                try:
+                    idx = car.streets.index(street)
+                    if idx != 0 and idx != len(car.streets) - 1:
+                        starting_only = False
+                        break
+                except ValueError as e:
+                    pass
+            if starting_only:
+                starting_intersect.add(street.intersect[1])
+        print("\tWe have " + str(len(starting_intersect)) + " starting intersections out of " + str(nr_intersect))
 
         # Determining the number of connected components in the graph formed by the paths that the cars follow
         connected_components = []
