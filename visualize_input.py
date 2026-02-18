@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
+from collections import Counter, defaultdict
+
 import matplotlib.gridspec as gridspec
+import matplotlib.pyplot as plt
 import numpy as np
-from collections import defaultdict
-from collections import Counter
 
 def parse_input(filepath):
     with open(filepath) as f:
