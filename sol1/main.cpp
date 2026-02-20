@@ -1,8 +1,8 @@
 #include <map>
 #include <array>
+#include <numeric>
 #include <iostream>
 #include <algorithm>
-#include <numeric>
 
 #include "Data.h"
 #include "MergeFindSet.h"
@@ -78,6 +78,8 @@ int main()
         std::cout << "Now working on " << input_file << std::endl;
         Data data(in_prefix + input_file);
         BasicSolver solver(data);
+        // These two metrics show the extent to which obtaining the schedule can be parallelized
+        // (How much overlap is there between the car paths?)
         std::cout << "The average active intersection influences " << solver.get_avg_frequency() << " cars on average\n";
         std::cout << "The car paths form " << solver.count_connected_components() << " independent components\n\n";
 
