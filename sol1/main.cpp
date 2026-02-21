@@ -1,5 +1,6 @@
 #include <map>
 #include <array>
+#include <queue>
 #include <numeric>
 #include <iostream>
 #include <algorithm>
@@ -53,13 +54,13 @@ public:
         return components;
     }
 
-    std::map<int, std::vector<std::pair<std::string,int>>> solve()
+    Schedule solve()
     {
-        std::map<int, std::vector<std::pair<std::string,int>>> schedule;
-        for (const auto& [street_name, _] : data.street_usage)
+        Schedule schedule;
+        for (int street_id = 0; street_id < data.nr_streets; ++ street_id)
         {
-            const int intersection = std::get<1>(data.street_info.at(street_name));
-            schedule[intersection].emplace_back(street_name, 1);
+            const int intersection = std::get<1>(data.street_info.at(street_id));
+            schedule[intersection].emplace_back(street_id, 1);
         }
 
         return schedule;
@@ -86,7 +87,7 @@ int main()
         const auto result = solver.solve();
 
         const auto out_filename = out_prefix + input_file.substr(0, (input_file.find('.'))) + ".out";
-        Data::write_to_file(out_filename, result);
+        data.write_to_file(out_filename, result);
     }
     return 0;
 }
