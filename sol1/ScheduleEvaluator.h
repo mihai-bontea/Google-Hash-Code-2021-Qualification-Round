@@ -3,6 +3,7 @@
 #include <queue>
 #include <vector>
 #include <numeric>
+#include <cassert>
 #include <unordered_map>
 
 #include "Data.h"
@@ -13,22 +14,36 @@ using MinHeap = std::priority_queue<std::pair<int,int>,
             return a.first > b.first;
         })>;
 
-class ScheduleEvaluator
+struct StreetGreenInfo {
+    int green_start;  // offset within cycle
+    int green_end;    // offset within cycle
+    int cycle_length; // total cycle length at this intersection
+};
+
+struct ScheduleEvaluator
 {
-private:
     const Data& data;
     const Schedule& schedule;
     // intersection -> {(green_light_start, green_light_end)} in the same street order as Schedule
     std::unordered_map<int, std::vector<std::pair<int,int>>> streets_green_intervals;
 
-    std::vector<std::queue<std::pair<int, int>>> street_to_queue;
+    std::vector<int> street_id_to_local_time, street_pos_in_sched;
+
+    std::vector<int> car_id_to_street_pos;
+
+    std::vector<StreetGreenInfo> street_green_info;
+
+    // street_id -> {(time, car_id)}
+    std::vector<MinHeap> street_to_queue;
     MinHeap events;
+
+    unsigned long long total_score;
 
     void precompute_street_green_intervals()
     {
-        int time = 0;
         for (const auto& [intersection_id, street_schedule] : schedule)
         {
+            int time = 0;
             auto& intervals = streets_green_intervals[intersection_id];
             for (const auto [street_id, green_light_time] : street_schedule)
             {
@@ -38,44 +53,87 @@ private:
         }
     }
 
-    // Modify, nu mai face event pt secunda 0 ca n-are sens
+    void precompute_street_pos_in_sched()
+    {
+        std::fill(street_pos_in_sched.begin(), street_pos_in_sched.end(), -1);
+
+        for (const auto& [intersection_id, street_schedule] : schedule)
+        {
+            for (int pos = 0; pos < (int)street_schedule.size(); ++pos)
+            {
+                street_pos_in_sched[street_schedule[pos].first] = pos;
+            }
+        }
+    }
+
+    void precompute_street_green_info()
+    {
+        street_green_info.assign(data.nr_streets, {-1, -1, -1});
+
+        for (const auto& [intersection_id, street_schedule] : schedule)
+        {
+            int time = 0;
+            for (const auto& [street_id, green_duration] : street_schedule)
+            {
+                street_green_info[street_id] = {time, time + green_duration - 1, -1};
+                time += green_duration;
+            }
+            // Now set cycle_length for all streets at this intersection
+            for (const auto& [street_id, green_duration] : street_schedule)
+                street_green_info[street_id].cycle_length = time;
+        }
+    }
+
+    inline bool is_street_scheduled(int street_id) const
+    {
+        return street_pos_in_sched[street_id] != -1;
+    }
+
+    inline int get_next_street_for_car(int car_id) const
+    {
+        const int pos_in_path = car_id_to_street_pos[car_id] + 1;
+        return data.car_paths[car_id][pos_in_path];
+    }
+
     void insert_starting_streets()
     {
-        // step 1: group cars by street
-        // step 2: using get_next_green_light_time and incrementng time, handle each street fully before moving on
-        // push new events to heap and to street_to_queue
-
         for (int car_id = 0; car_id < data.nr_cars; ++car_id)
         {
-            const int starting_street = data.car_paths[car_id].front();
             // Cars start at the end of the first street
-            street_to_queue[starting_street].emplace(car_id, 0);
-            events.emplace(0, starting_street);
+            const int starting_street_id = data.car_paths[car_id].front();
+
+            // Since initially multiple cars can be at the end of the 1st street at the exact same time, we need to manually
+            // update the local time for each street
+            const int local_time = street_id_to_local_time[starting_street_id];
+            const int next_green_light_time = get_next_green_light_time(starting_street_id, local_time);
+            assert(next_green_light_time >= 0);
+
+            const int next_street_id = get_next_street_for_car(car_id);
+
+            // Time until next event(when car reaches the end of the next street)
+            const int next_street_length = std::get<2>(data.street_info.at(next_street_id));
+            const int time_until_next_event = next_green_light_time + next_street_length;
+
+            // Update the events queues
+            street_to_queue[next_street_id].emplace(time_until_next_event, car_id);
+            events.emplace(time_until_next_event, next_street_id);
+
+            // Update the time for the current street(i.e. how much did the car wait for the green light?)
+            street_id_to_local_time[starting_street_id] = next_green_light_time + 1;
+            car_id_to_street_pos[car_id]++;
         }
     }
 
     int get_next_green_light_time(int street_id, int current_time)
     {
-        const int intersection_id = std::get<0>(data.street_info.at(street_id));
+        const auto& info = street_green_info[street_id];
+        const int sec_in_cycle = current_time % info.cycle_length;
 
-        const auto& street_schedule = schedule.find(intersection_id)->second;
-        auto it = std::find_if(street_schedule.begin(), street_schedule.end(),
-                               [street_id](const std::pair<int,int>& p) { return p.first == street_id; });
-        const int street_pos_in_sched = std::distance(street_schedule.begin(), it);
-
-        auto& green_intervals = streets_green_intervals[intersection_id];
-        const int streets_at_int = green_intervals.size();
-        const int cycle_length = green_intervals[streets_at_int - 1].second + 1;
-        const int sec_in_cycle = current_time % cycle_length;
-
-        const auto [desired_start, desired_end] = green_intervals[street_pos_in_sched];
-
-        if (desired_start <= sec_in_cycle && sec_in_cycle <= desired_end)
+        if (sec_in_cycle >= info.green_start && sec_in_cycle <= info.green_end)
             return current_time;
-        else if (desired_end < sec_in_cycle)
-            return current_time + cycle_length - sec_in_cycle + desired_start;
-        else
-            return desired_start - sec_in_cycle;
+        if (sec_in_cycle > info.green_end)
+            return current_time + info.cycle_length - sec_in_cycle + info.green_start;
+        return current_time + info.green_start - sec_in_cycle;
     }
 
     std::pair<int, std::set<int>> get_street_ids_with_next_events()
@@ -89,54 +147,84 @@ private:
         }
         return {soonest_event_time, affected_street_ids};
     }
-public:
+
+    inline bool is_last_street(int car_id) const
+    {
+        return car_id_to_street_pos[car_id] == (data.car_paths[car_id].size() - 1);
+    }
+
+    inline void update_score(int current_time)
+    {
+        if (current_time <= data.simulation_seconds)
+            total_score += data.score_per_car + (data.simulation_seconds - current_time);
+    }
 
     explicit ScheduleEvaluator(const Data& data, const Schedule& schedule)
     : data(data)
+    , total_score(0)
+    , car_id_to_street_pos(data.nr_cars)
+    , street_to_queue(data.nr_streets)
+    , street_id_to_local_time(data.nr_streets)
+    , street_pos_in_sched(data.nr_streets)
+    , street_green_info(data.nr_streets)
     , schedule(schedule)
     {
         street_to_queue.reserve(data.nr_streets);
 
         precompute_street_green_intervals();
+        precompute_street_pos_in_sched();
+        precompute_street_green_info();
         insert_starting_streets();
     }
 
-    int simulate()
+    unsigned long long simulate()
     {
-        std::vector<int> car_id_to_street_pos(data.nr_cars);
-
-        int t = 0;
-        while (t <= data.simulation_seconds)
+        // Simulate while there are events left and time is not exceeded
+        while (!events.empty())
         {
-            const auto [soonest_event_time, affected_street_ids] = get_street_ids_with_next_events(events);
+            const auto [soonest_event_time, affected_street_ids] = get_street_ids_with_next_events();
+            if (soonest_event_time > data.simulation_seconds)
+                break;
 
-
-            for (const auto& [street_name, _] : data.street_usage)
+            for (int street_id : affected_street_ids)
             {
-                auto& queue = street_to_queue[street_name];
-                if (queue.empty())
+                const auto [time, car_id] = street_to_queue[street_id].top();
+                assert(time == soonest_event_time);
+
+                street_to_queue[street_id].pop();
+                // Two events for the same street should never happen at the same time
+                // If last street in path, update score and skip the event updating
+                if (is_last_street(car_id))
+                {
+                    update_score(time);
+                    continue;
+                }
+
+                // If the schedule doesn't include this street, no need to process further
+                if (!is_street_scheduled(street_id))
                     continue;
 
-                const auto [car_id, entry_second] = queue.front();
+                // Despite the fact that a car may reach end of street at 'time', we also need 'local_time' in case
+                // it has to wait after other cars already queued at the street's end
+                // This is only relevant when wanting to pass through the intersection(not on last street in path)
+                const int local_time = std::max(time, street_id_to_local_time[street_id]);
 
-                const int street_len = std::get<2>(data.street_info.at(street_name));
-                if (t - entry_second >= street_len)
-                {
-                    // car can go through intersection IF it got green light
-                    bool green_light = true;
-                    if (green_light)
-                    {
-                        // push into the queue for the next street
-                        queue.pop();
-                    }
-                }
+                const int next_green_light_time = get_next_green_light_time(street_id, local_time);
+                const int next_street_id = get_next_street_for_car(car_id);
+
+                // Time until next event(when car reaches the end of the next street)
+                const int next_street_length = std::get<2>(data.street_info.at(next_street_id));
+                const int time_until_next_event = next_green_light_time + next_street_length;
+
+                // Update the events queues
+                street_to_queue[next_street_id].emplace(time_until_next_event, car_id);
+                events.emplace(time_until_next_event, next_street_id);
+
+                // Update the time for the current street(i.e. how much did the car wait for the green light?)
+                street_id_to_local_time[street_id] = next_green_light_time + 1;
+                car_id_to_street_pos[car_id]++;
             }
-            // Pass time to next event
-            // a) a car reaches the end of a street
-            // b) a street with a car at the end gets green light
-            // min priority_queue care tine secundele pana la urmatoru event
-            // cand pushezi o masina pe o strada, bagi secunda cand ajunge la final in PQ
-            // cand o masina la final de strada are rosu, pushezi momentu cand o sa aiba verde?
         }
+        return total_score;
     }
 };

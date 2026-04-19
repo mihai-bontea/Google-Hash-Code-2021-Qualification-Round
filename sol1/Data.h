@@ -60,9 +60,12 @@ struct Data
             while (nr_streets_in_path--)
             {
                 fin >> street_name;
-                int id = street_name_to_id[street_name];
-                street_usage[id]++;
-                car_paths[i].push_back(id);
+                const int street_id = street_name_to_id[street_name];
+
+                // No need to schedule the last intersection
+                if (nr_streets_in_path)
+                    street_usage[street_id]++;
+                car_paths[i].push_back(street_id);
             }
         }
     }
