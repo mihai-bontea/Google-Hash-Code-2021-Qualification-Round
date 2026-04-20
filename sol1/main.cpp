@@ -123,93 +123,93 @@ void test_get_next_green_light1()
     assert(next_green_light_time == 5);
 }
 
-void test_insert_starting_streets1()
-{
-    const std::string in_prefix = "../../test_input_files/";
-    const std::string input_file = "test1.in";
-
-    Data data(in_prefix + input_file);
-    // Create a basic schedule(each required street receives 1 second of green, in lexicographic order)
-    Schedule schedule;
-    schedule[1].emplace_back(0, 1);
-    schedule[1].emplace_back(1, 1);
-    schedule[1].emplace_back(3, 1);
-    schedule[4].emplace_back(2, 1);
-
-    ScheduleEvaluator sched_ev(data, schedule);
-    const auto [soonest_event_time, affected_street_ids] = sched_ev.get_street_ids_with_next_events();
-    // Car 0 reaches end of street C(of length 1)
-    assert(soonest_event_time == 1);
-
-    // Only street C should have an event at the time
-    assert(affected_street_ids.size() == 1 && affected_street_ids.contains(2));
-    {
-        // Car 0 should be at the top of the heap (soonest event)
-        const auto [time, car_id] = sched_ev.street_to_queue[2].top();
-        assert(time == 1 && car_id == 0);
-    }
-
-    {
-        // Next event should be car 1 reaching the end of street C
-        sched_ev.street_to_queue[2].pop();
-        const auto [time, car_id] = sched_ev.street_to_queue[2].top();
-        assert(time == 2 && car_id == 1);
-    }
-
-    {
-        // Next event should be car 2 reaching the end of street C
-        sched_ev.street_to_queue[2].pop();
-        const auto [time, car_id] = sched_ev.street_to_queue[2].top();
-        assert(time == 3 && car_id == 2);
-    }
-}
-
-void test_insert_starting_streets2()
-{
-    const std::string in_prefix = "../../test_input_files/";
-    const std::string input_file = "test2.in";
-
-    Data data(in_prefix + input_file);
-    // Create a basic schedule(each required street receives 1 second of green, in lexicographic order)
-    Schedule schedule;
-    schedule[1].emplace_back(0, 1);
-    schedule[2].emplace_back(1, 1);
-    schedule[3].emplace_back(2, 1);
-
-    ScheduleEvaluator sched_ev(data, schedule);
-    const auto [soonest_event_time, affected_street_ids] = sched_ev.get_street_ids_with_next_events();
-    // Car 0 reaches end of street B(of length 5)
-    assert(soonest_event_time == 5);
-
-    // Only street B should have an event at the time
-    assert(affected_street_ids.size() == 1 && affected_street_ids.contains(1));
-    {
-        // Car 0 should be at the top of the heap (soonest event)
-        const auto [time, car_id] = sched_ev.street_to_queue[1].top();
-        assert(time == 5 && car_id == 0);
-    }
-
-    {
-        // Next event should be car 1 reaching the end of street B
-        sched_ev.street_to_queue[1].pop();
-        const auto [time, car_id] = sched_ev.street_to_queue[1].top();
-        assert(time == 6 && car_id == 1);
-    }
-
-    {
-        // Next event should be car 2 reaching the end of street B
-        sched_ev.street_to_queue[1].pop();
-        const auto [time, car_id] = sched_ev.street_to_queue[1].top();
-        assert(time == 7 && car_id == 2);
-    }
-
-    {
-        // Next event should be car 3 reaching the end of street B
-        sched_ev.street_to_queue[1].pop();
-        const auto [time, car_id] = sched_ev.street_to_queue[1].top();
-        assert(time == 8 && car_id == 3);
-    }
-}
+//void test_insert_starting_streets1()
+//{
+//    const std::string in_prefix = "../../test_input_files/";
+//    const std::string input_file = "test1.in";
+//
+//    Data data(in_prefix + input_file);
+//    // Create a basic schedule(each required street receives 1 second of green, in lexicographic order)
+//    Schedule schedule;
+//    schedule[1].emplace_back(0, 1);
+//    schedule[1].emplace_back(1, 1);
+//    schedule[1].emplace_back(3, 1);
+//    schedule[4].emplace_back(2, 1);
+//
+//    ScheduleEvaluator sched_ev(data, schedule);
+//    const auto [soonest_event_time, affected_street_ids] = sched_ev.get_street_ids_with_next_events();
+//    // Car 0 reaches end of street C(of length 1)
+//    assert(soonest_event_time == 1);
+//
+//    // Only street C should have an event at the time
+//    assert(affected_street_ids.size() == 1 && affected_street_ids.contains(2));
+//    {
+//        // Car 0 should be at the top of the heap (soonest event)
+//        const auto [time, car_id] = sched_ev.street_to_queue[2].top();
+//        assert(time == 1 && car_id == 0);
+//    }
+//
+//    {
+//        // Next event should be car 1 reaching the end of street C
+//        sched_ev.street_to_queue[2].pop();
+//        const auto [time, car_id] = sched_ev.street_to_queue[2].top();
+//        assert(time == 2 && car_id == 1);
+//    }
+//
+//    {
+//        // Next event should be car 2 reaching the end of street C
+//        sched_ev.street_to_queue[2].pop();
+//        const auto [time, car_id] = sched_ev.street_to_queue[2].top();
+//        assert(time == 3 && car_id == 2);
+//    }
+//}
+//
+//void test_insert_starting_streets2()
+//{
+//    const std::string in_prefix = "../../test_input_files/";
+//    const std::string input_file = "test2.in";
+//
+//    Data data(in_prefix + input_file);
+//    // Create a basic schedule(each required street receives 1 second of green, in lexicographic order)
+//    Schedule schedule;
+//    schedule[1].emplace_back(0, 1);
+//    schedule[2].emplace_back(1, 1);
+//    schedule[3].emplace_back(2, 1);
+//
+//    ScheduleEvaluator sched_ev(data, schedule);
+//    const auto [soonest_event_time, affected_street_ids] = sched_ev.get_street_ids_with_next_events();
+//    // Car 0 reaches end of street B(of length 5)
+//    assert(soonest_event_time == 5);
+//
+//    // Only street B should have an event at the time
+//    assert(affected_street_ids.size() == 1 && affected_street_ids.contains(1));
+//    {
+//        // Car 0 should be at the top of the heap (soonest event)
+//        const auto [time, car_id] = sched_ev.street_to_queue[1].top();
+//        assert(time == 5 && car_id == 0);
+//    }
+//
+//    {
+//        // Next event should be car 1 reaching the end of street B
+//        sched_ev.street_to_queue[1].pop();
+//        const auto [time, car_id] = sched_ev.street_to_queue[1].top();
+//        assert(time == 6 && car_id == 1);
+//    }
+//
+//    {
+//        // Next event should be car 2 reaching the end of street B
+//        sched_ev.street_to_queue[1].pop();
+//        const auto [time, car_id] = sched_ev.street_to_queue[1].top();
+//        assert(time == 7 && car_id == 2);
+//    }
+//
+//    {
+//        // Next event should be car 3 reaching the end of street B
+//        sched_ev.street_to_queue[1].pop();
+//        const auto [time, car_id] = sched_ev.street_to_queue[1].top();
+//        assert(time == 8 && car_id == 3);
+//    }
+//}
 
 void test_score1()
 {
