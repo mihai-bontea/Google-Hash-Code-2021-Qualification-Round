@@ -27,7 +27,7 @@ public:
             for (int i = 0; i < car_path.size() - 1; ++i)
             {
                 const auto &street_name = car_path[i];
-                const int intersection = std::get<1>(data.street_info.at(street_name));
+                const int intersection = std::get<1>(data.street_intersect.at(street_name));
                 intersection_frequency[intersection]++;
             }
         }
@@ -42,8 +42,8 @@ public:
         for (const auto& car_path : data.car_paths)
             for (int i = 0; i + 1 < (int)car_path.size(); ++i)
             {
-                int from = std::get<0>(data.street_info.at(car_path[i]));
-                int to   = std::get<1>(data.street_info.at(car_path[i]));
+                int from = std::get<0>(data.street_intersect.at(car_path[i]));
+                int to   = std::get<1>(data.street_intersect.at(car_path[i]));
                 if (!mfs.are_same_set(from + 1, to + 1))
                     mfs.merge_sets(from + 1, to + 1);
             }
@@ -64,7 +64,7 @@ public:
             if (!data.street_usage[street_id])
                 continue;
 
-            const int intersection = std::get<1>(data.street_info.at(street_id));
+            const int intersection = std::get<1>(data.street_intersect.at(street_id));
             schedule[intersection].emplace_back(street_id, 1);
         }
 

@@ -25,8 +25,6 @@ struct ScheduleEvaluator
 {
     const Data& data;
     const Schedule& schedule;
-    // intersection -> {(green_light_start, green_light_end)} in the same street order as Schedule
-    std::unordered_map<int, std::vector<std::pair<int,int>>> streets_green_intervals;
 
     std::vector<int> street_id_to_local_time, street_pos_in_sched;
 
@@ -38,20 +36,6 @@ struct ScheduleEvaluator
     BucketQueue<std::pair<int, int>> events;
 
     unsigned long long total_score;
-
-    void precompute_street_green_intervals()
-    {
-        for (const auto& [intersection_id, street_schedule] : schedule)
-        {
-            int time = 0;
-            auto& intervals = streets_green_intervals[intersection_id];
-            for (const auto [street_id, green_light_time] : street_schedule)
-            {
-                intervals.emplace_back(time, time + green_light_time - 1);
-                time += green_light_time;
-            }
-        }
-    }
 
     void precompute_street_pos_in_sched()
     {
@@ -84,12 +68,12 @@ struct ScheduleEvaluator
         }
     }
 
-    inline bool is_street_scheduled(int street_id) const
+    inline bool is_street_scheduled(int street_id) const noexcept
     {
         return street_pos_in_sched[street_id] != -1;
     }
 
-    inline int get_next_street_for_car(int car_id) const
+    inline int get_next_street_for_car(int car_id) const noexcept
     {
         const int pos_in_path = car_id_to_street_pos[car_id] + 1;
         return data.car_paths[car_id][pos_in_path];
@@ -111,8 +95,7 @@ struct ScheduleEvaluator
             const int next_street_id = get_next_street_for_car(car_id);
 
             // Time until next event(when car reaches the end of the next street)
-            const int next_street_length = std::get<2>(data.street_info.at(next_street_id));
-            const int time_until_next_event = next_green_light_time + next_street_length;
+            const int time_until_next_event = next_green_light_time + data.street_to_length[next_street_id];
 
             // Update the events queues
             events.insert({next_street_id, car_id}, time_until_next_event);
@@ -123,7 +106,7 @@ struct ScheduleEvaluator
         }
     }
 
-    int get_next_green_light_time(int street_id, int current_time)
+    int get_next_green_light_time(int street_id, int current_time) const noexcept
     {
         const auto& info = street_green_info[street_id];
         const int sec_in_cycle = current_time % info.cycle_length;
@@ -135,12 +118,12 @@ struct ScheduleEvaluator
         return current_time + info.green_start - sec_in_cycle;
     }
 
-    inline bool is_last_street(int car_id) const
+    inline bool is_last_street(int car_id) const noexcept
     {
         return car_id_to_street_pos[car_id] == (data.car_paths[car_id].size() - 1);
     }
 
-    inline void update_score(int current_time)
+    inline void update_score(int current_time) noexcept
     {
         if (current_time <= data.simulation_seconds)
             total_score += data.score_per_car + (data.simulation_seconds - current_time);
@@ -155,7 +138,6 @@ struct ScheduleEvaluator
     , street_green_info(data.nr_streets)
     , schedule(schedule)
     {
-        precompute_street_green_intervals();
         precompute_street_pos_in_sched();
         precompute_street_green_info();
         insert_starting_streets();
@@ -164,11 +146,14 @@ struct ScheduleEvaluator
     unsigned long long simulate()
     {
         // Simulate while there are events left and time is not exceeded
+        int prev_time = 0;
         while (!events.empty())
         {
-            const int soonest_event_time = events.find_next_non_empty(0);
+            const int soonest_event_time = events.find_next_non_empty(prev_time);
             if (soonest_event_time > data.simulation_seconds)
                 break;
+
+            prev_time = soonest_event_time;
 
             const auto soonest_events = events.extract_bucket(soonest_event_time);
             for (const auto& [street_id, car_id] : soonest_events)
@@ -194,8 +179,7 @@ struct ScheduleEvaluator
                 const int next_street_id = get_next_street_for_car(car_id);
 
                 // Time until next event(when car reaches the end of the next street)
-                const int next_street_length = std::get<2>(data.street_info.at(next_street_id));
-                const int time_until_next_event = next_green_light_time + next_street_length;
+                const int time_until_next_event = next_green_light_time + data.street_to_length[next_street_id];
 
                 // Update the events queues
                 events.insert({next_street_id, car_id}, time_until_next_event);

@@ -12,7 +12,7 @@ private:
     std::vector<T> buckets[NUM_BUCKETS];
     uint64_t bitset[NUM_WORDS] = {};
 
-    int current_min = 0, size = 0;
+    int size = 0;
 
     static inline int word_index(int p) { return p / WORD_SIZE; }
     static inline int bit_index(int p) { return p % WORD_SIZE; }
@@ -27,29 +27,25 @@ private:
         bitset[word_index(p)] &= ~(1ULL << bit_index(p));
     }
 
-    inline bool test_bit(int p) const
+    inline bool test_bit(int p) const noexcept
     {
         return bitset[word_index(p)] & (1ULL << bit_index(p));
     }
 
 public:
-    void insert(const T& value, int priority)
+    void insert(const T& value, int priority) noexcept
     {
         size++;
         buckets[priority].push_back(value);
         set_bit(priority);
-
-        if (priority < current_min) {
-            current_min = priority;
-        }
     }
 
-    inline bool empty() const
+    inline bool empty() const noexcept
     {
         return size == 0;
     }
 
-    int find_next_non_empty(int start) const
+    int find_next_non_empty(int start) const noexcept
     {
         int w = word_index(start);
         uint64_t word = bitset[w];
@@ -68,13 +64,8 @@ public:
         }
     }
 
-    std::vector<T> extract_bucket(int p)
+    std::vector<T> extract_bucket(int p) noexcept
     {
-        if (size == 0)
-            throw std::runtime_error("BucketQueue is empty");
-
-        current_min = p;
-
         // Move the entire bucket out
         std::vector<T> result = std::move(buckets[p]);
 

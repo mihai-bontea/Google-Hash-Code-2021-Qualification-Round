@@ -4,15 +4,19 @@
 #include <fstream>
 #include <unordered_map>
 
+#define MAX_DURATION 8072
+
 // intersection -> {street_id : green_light_seconds}
-using Schedule = std::map<int, std::vector<std::pair<int,int>>>;
+using Schedule = std::unordered_map<int, std::vector<std::pair<int,int>>>;
 
 struct Data
 {
     int simulation_seconds, nr_intersections, nr_streets, nr_cars, score_per_car;
 
     // street_id -> (start_intersection, end_intersection, length)
-    std::vector<std::tuple<int,int,int>> street_info;
+//    std::vector<std::tuple<int,int,int>> street_info;
+    std::vector<std::pair<int, int>> street_intersect;
+    std::vector<int> street_to_length;
 
     // intersection -> list of incoming street_ids
     std::vector<std::vector<int>> incoming;
@@ -34,7 +38,8 @@ struct Data
 
         incoming.resize(nr_intersections);
         car_paths.resize(nr_cars);
-        street_info.resize(nr_streets);
+        street_intersect.resize(nr_streets);
+        street_to_length.resize(nr_streets);
         street_id_to_name.resize(nr_streets);
         street_usage.resize(nr_streets, 0);
 
@@ -47,7 +52,8 @@ struct Data
 
             street_name_to_id[street_name] = i;
             street_id_to_name[i] = street_name;
-            street_info[i] = {start_int, end_int, length_in_sec};
+            street_intersect[i] = {start_int, end_int};
+            street_to_length[i] = length_in_sec;
             incoming[end_int].push_back(i);
         }
 
