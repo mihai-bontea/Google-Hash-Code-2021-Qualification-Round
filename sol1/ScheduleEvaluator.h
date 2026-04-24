@@ -9,12 +9,6 @@
 #include "Data.h"
 #include "BucketQueue.h"
 
-using MinHeap = std::priority_queue<std::pair<int,int>,
-        std::vector<std::pair<int,int>>,
-        decltype([](const std::pair<int,int>& a, const std::pair<int,int>& b) {
-            return a.first > b.first;
-        })>;
-
 struct StreetGreenInfo {
     int green_start;  // offset within cycle
     int green_end;    // offset within cycle
