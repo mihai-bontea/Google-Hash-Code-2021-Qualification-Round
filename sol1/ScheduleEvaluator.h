@@ -26,7 +26,7 @@ struct ScheduleEvaluator
     const Data& data;
     const Schedule& schedule;
 
-    std::vector<int> street_id_to_local_time, street_pos_in_sched;
+    std::vector<int> street_id_to_local_time;
 
     std::vector<int> car_id_to_street_pos;
 
@@ -36,19 +36,6 @@ struct ScheduleEvaluator
     BucketQueue<std::pair<int, int>> events;
 
     unsigned long long total_score;
-
-    void precompute_street_pos_in_sched()
-    {
-        std::fill(street_pos_in_sched.begin(), street_pos_in_sched.end(), -1);
-
-        for (const auto& [intersection_id, street_schedule] : schedule)
-        {
-            for (int pos = 0; pos < (int)street_schedule.size(); ++pos)
-            {
-                street_pos_in_sched[street_schedule[pos].first] = pos;
-            }
-        }
-    }
 
     void precompute_street_green_info()
     {
@@ -70,7 +57,7 @@ struct ScheduleEvaluator
 
     inline bool is_street_scheduled(int street_id) const noexcept
     {
-        return street_pos_in_sched[street_id] != -1;
+        return street_green_info[street_id].cycle_length != -1;
     }
 
     inline int get_next_street_for_car(int car_id) const noexcept
@@ -134,11 +121,9 @@ struct ScheduleEvaluator
     , total_score(0)
     , car_id_to_street_pos(data.nr_cars)
     , street_id_to_local_time(data.nr_streets)
-    , street_pos_in_sched(data.nr_streets)
     , street_green_info(data.nr_streets)
     , schedule(schedule)
     {
-        precompute_street_pos_in_sched();
         precompute_street_green_info();
         insert_starting_streets();
     }
