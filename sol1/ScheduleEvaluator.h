@@ -26,7 +26,6 @@ struct ScheduleEvaluator
 
     std::vector<StreetGreenInfo> street_green_info;
 
-    // street_id -> {(time, car_id)}
     BucketQueue<std::pair<int, int>> events;
 
     unsigned long long total_score;
@@ -57,7 +56,7 @@ struct ScheduleEvaluator
     inline int get_next_street_for_car(int car_id) const noexcept
     {
         const int pos_in_path = car_id_to_street_pos[car_id] + 1;
-        return data.car_paths[car_id][pos_in_path];
+        return data.car_path_at(car_id, pos_in_path);
     }
 
     void insert_starting_streets()
@@ -65,7 +64,7 @@ struct ScheduleEvaluator
         for (int car_id = 0; car_id < data.nr_cars; ++car_id)
         {
             // Cars start at the end of the first street
-            const int starting_street_id = data.car_paths[car_id].front();
+            const int starting_street_id = data.car_path_first(car_id);
 
             // Since initially multiple cars can be at the end of the 1st street at the exact same time, we need to manually
             // update the local time for each street
@@ -101,7 +100,7 @@ struct ScheduleEvaluator
 
     inline bool is_last_street(int car_id) const noexcept
     {
-        return car_id_to_street_pos[car_id] == (data.car_paths[car_id].size() - 1);
+        return car_id_to_street_pos[car_id] == (data.car_path_length(car_id) - 1);
     }
 
     inline void update_score(int current_time) noexcept
@@ -111,12 +110,12 @@ struct ScheduleEvaluator
     }
 
     explicit ScheduleEvaluator(const Data& data, const Schedule& schedule)
-    : data(data)
-    , total_score(0)
-    , car_id_to_street_pos(data.nr_cars)
-    , street_id_to_local_time(data.nr_streets)
-    , street_green_info(data.nr_streets)
-    , schedule(schedule)
+            : data(data)
+            , total_score(0)
+            , car_id_to_street_pos(data.nr_cars)
+            , street_id_to_local_time(data.nr_streets)
+            , street_green_info(data.nr_streets)
+            , schedule(schedule)
     {
         precompute_street_green_info();
         insert_starting_streets();
@@ -139,7 +138,7 @@ struct ScheduleEvaluator
             {
                 // Two events for the same street should never happen at the same time
                 // If last street in path, update score and skip the event updating
-                if (is_last_street(car_id))
+                if (is_last_street(car_id)) [[unlikely]]
                 {
                     update_score(soonest_event_time);
                     continue;
