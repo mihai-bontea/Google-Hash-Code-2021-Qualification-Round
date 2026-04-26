@@ -66,6 +66,10 @@ struct ScheduleEvaluator
             // Cars start at the end of the first street
             const int starting_street_id = data.car_path_first(car_id);
 
+            // If the schedule doesn't include this street, no need to process further
+            if (!is_street_scheduled(starting_street_id))
+                continue;
+
             // Since initially multiple cars can be at the end of the 1st street at the exact same time, we need to manually
             // update the local time for each street
             const int local_time = street_id_to_local_time[starting_street_id];
