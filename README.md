@@ -1,14 +1,20 @@
 # Google Hash Code 2021 Qualification Round(Traffic Signaling)
 
-Multiple classic optimization algorithms could be used to solve this problem, but the extent to which it would work depends on whether we can create a fast, lightweight module for evaluating a schedule.
+<p align="center">
+  <img width="863" height="263" alt="Image" src="https://github.com/user-attachments/assets/5db47478-eea6-42a5-9aa7-4ebaa4a85411" />
+</p>
+
+>Given the description of a city plan and planned paths for all cars in that city, optimize the schedule of traffic lights to minimize the total amount of time spent in traffic, and help as many cars as possible reach their destination before a given deadline.
 
 ## Schedule Evaluator
-Over simplified, it involves pushing and popping a min-heap containing events (car reaches end of a street) and resolving how much each car waits at an intersection(depends on green light schedule and number of cars queued), when they reach the end, and how many seconds they have to spare.
+Multiple classic optimization algorithms could be used to solve this problem, but the extent to which it would work depends on whether we can create a fast, lightweight module for evaluating a schedule.
+
+Over simplified, the schedule evaluator involves pushing and popping a min-heap containing events (car reaches end of a street) and resolving how much each car waits at an intersection(depends on green light schedule and number of cars queued), when they reach the end, and how many seconds they have to spare.
 
 ### Notable speed improvements
 * the problem statement and input/output files use strings to refer to streets. Internally, due to the constant need to fetch information about streets and model relationships between streets, cars, and intersections, a variable **street_id_to_name** is used to translate strings to a unique integer between {0, nr_streets}. This gets rid of the need for hashing operations on strings and greatly improves cache locality
-* a very common operation is get_next_green_light_time(street, current_time). By precomputing the green light intervals for each street(it's a cycle, therefore we  can use MOD) it becomes O(1) ~ 30-40% speed improvement
-* BucketQueue instead of MinHeap(5-8x speed improvement): A standard priority_queue (binary heap) gives O(log n) per push and O(log n) per pop. For this simulation, n grows to roughly the number of in-flight cars, which can be hundreds of thousands. Every car movement is one pop and one push, so heap overhead dominates the inner loop. BucketQueue is a std::vector<T> buckets[MAX_TIME] plus a std::bitset<MAX_TIME> marking which buckets are non-empty. Push is a single buckets[time].push_back(item) plus setting one bit — O(1) with no comparisons. Finding the minimum non-empty bucket is &&**__builtin_ctzll** on the bitset — also effectively O(1), one CPU instruction per word scanned.
+* a very common operation is **get_next_green_light_time(street, current_time)**. By precomputing the green light intervals for each street(it's a cycle, therefore we  can use MOD) it becomes O(1) ~ 30-40% speed improvement
+* **BucketQueue instead of MinHeap**(5-8x speed improvement): A standard priority_queue (binary heap) gives O(log n) per push and O(log n) per pop. For this simulation, n grows to roughly the number of in-flight cars, which can be hundreds of thousands. Every car movement is one pop and one push, so heap overhead dominates the inner loop. BucketQueue is a std::vector<T> buckets[MAX_TIME] plus a std::bitset<MAX_TIME> marking which buckets are non-empty. Push is a single buckets[time].push_back(item) plus setting one bit — O(1) with no comparisons. Finding the minimum non-empty bucket is &&**__builtin_ctzll** on the bitset — also effectively O(1), one CPU instruction per word scanned.
 
 ## Solution 1
 
