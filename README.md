@@ -47,6 +47,6 @@ A parallel genetic algorithm that evolves traffic light schedules. Built on top 
 
 ## Input file visualization
 
-For each .in file it parses the problem (intersections, streets, cars, paths) and computes per-instance metrics: street usage frequency, car slack (deadline minus minimum travel time), intersection contention scores (Σ usage/length over incoming streets), and the distribution of incoming streets per intersection.
+For each .in file, visualize_input.py parses the problem (intersections, streets, cars, paths) and computes per-instance metrics: street usage frequency, car slack (deadline minus minimum travel time), intersection contention scores (Σ usage/length over incoming streets), and the distribution of incoming streets per intersection.
 
 <img width="2578" height="1728" alt="Image" src="https://github.com/user-attachments/assets/ffbd9718-0f36-40ba-9ffc-c48b67f48853" />
