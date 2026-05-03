@@ -24,13 +24,13 @@ struct GAConfig
     double crossover_rate = 0.8;             // probability of crossover (vs. cloning a parent)
     double mutation_rate = 0.5;              // probability that a child gets mutated
 
-    // Mutation-related (forwarded to MutationGenerator)
+    // Mutation-related
     double per_intersection_mut_rate = 0.05;
     double add_missing_intersection_rate = 0.05;
     int max_green_duration = 8;
 
     int time_budget_ms = 0;                  // 0 = use max_generations; >0 = run until time elapsed
-    int log_every = 5;                       // log every N generations
+    int log_every = 2000;                       // log every N generations
     int stagnation_limit = 50;               // gens without improvement before bumping mutation
     unsigned seed = 0;                       // 0 = random
 };
@@ -276,8 +276,16 @@ public:
             rngs.emplace_back(seed_gen());
     }
 
-    Schedule run()
+    Schedule run(bool run_for_30_minutes = false)
     {
+        // If requested, override the time budget to 30 minutes and let
+        // generations effectively be unlimited so the loop is bounded by time.
+        if (run_for_30_minutes)
+        {
+            config.time_budget_ms = 30 * 60 * 1000; // 30 minutes in ms
+            config.max_generations = std::numeric_limits<int>::max();
+        }
+
         const auto t_start = std::chrono::steady_clock::now();
 
         population.clear();
@@ -346,8 +354,14 @@ public:
                 gens_since_improvement++;
                 if (gens_since_improvement > 0 && gens_since_improvement % config.stagnation_limit == 0)
                 {
+                    if (gens_since_improvement > 1000)
+                    {
+                        std::cout << "Long stagnation period, shutting down simulation\n";
+                        break;
+                    }
+
                     current_mutation_rate = std::min(1.0, current_mutation_rate * 1.5);
-                    std::cout << "Stagnation detected, mutation rate now " << current_mutation_rate << '\n';
+                    // Stagnation detected, increase mutation rate
                 }
             }
 

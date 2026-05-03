@@ -21,14 +21,11 @@ int main()
 
     for (const auto& input_file : input_files)
     {
-//        if (input_file != "d_daily_commute.in")
-//            continue;
-
         std::cout << "Now working on " << input_file << std::endl;
         Data data(in_prefix + input_file);
 
         GeneticAlgorithm genetic_algorithm(data);
-        const auto best_schedule = genetic_algorithm.run();
+        const auto best_schedule = genetic_algorithm.run(input_file != "a_example.in");
 
         const auto out_filename = out_prefix + input_file.substr(0, (input_file.find('.'))) + ".out";
         data.write_to_file(out_filename, best_schedule);
