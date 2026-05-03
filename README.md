@@ -12,6 +12,8 @@ Over simplified, it involves pushing and popping a min-heap containing events (c
 
 ## Solution 1
 
+A basic solution in which each street that has cars passing through receives 1 second of green light time, in the order from the input file.
+
 | Input | Score |
 |---|---|
 | a_example | 1,001 |
@@ -24,16 +26,15 @@ Over simplified, it involves pushing and popping a min-heap containing events (c
 
 ## Solution 2
 
-A parallel genetic algorithm that evolves traffic light schedules. Built on top of an aggressively-optimized ScheduleEvaluator and parallelized with OpenMP across a 16-core CPU.
+A parallel **genetic algorithm** that evolves traffic light schedules. Built on top of an aggressively-optimized ScheduleEvaluator and parallelized with OpenMP across a 16-core CPU.
 
 ### Design choices
 
-* Genome: Each individual is a complete Schedule
-* Both the order of streets at each intersection and their green durations are part of the genotype
-* Mutation: per-intersection probabilistic, with weighted operators (50% swap, 30% adjust duration, 10% shuffle, 10% add/remove)
-* Selection: tournament selection (size 3) with 10% elitism
-* Seeding: 5% trivial copies (1 sec green light for all) + 20% mutated trivial + 75% random
-* Parallelism: offspring generation(crossover + mutation) and offspring evaluation split using OpenMP
+* **Genome**: Each individual is a complete Schedule. Both the order of streets at each intersection and their green durations are part of the genotype
+* **Mutation**: per-intersection probabilistic, with weighted operators (50% swap, 30% adjust duration, 10% shuffle, 10% add/remove)
+* **Selection**: tournament selection (size 3) with 10% elitism
+* **Seeding**: 5% trivial copies (1 sec green light for all) + 20% mutated trivial + 75% random
+* **Parallelism**: offspring generation(crossover + mutation) and offspring evaluation split using **OpenMP**
 
 | Input | Solution 1 (Basic) | Solution 2 (GA) | Improvement |
 |---|---:|---:|---:|
@@ -47,6 +48,6 @@ A parallel genetic algorithm that evolves traffic light schedules. Built on top 
 
 ## Input file visualization
 
-For each .in file, visualize_input.py parses the problem (intersections, streets, cars, paths) and computes per-instance metrics: street usage frequency, car slack (deadline minus minimum travel time), intersection contention scores (Σ usage/length over incoming streets), and the distribution of incoming streets per intersection.
+For each .in file, **visualize_input.py** parses the problem (intersections, streets, cars, paths) and computes per-instance metrics: street usage frequency, car slack (deadline minus minimum travel time), intersection contention scores (Σ usage/length over incoming streets), and the distribution of incoming streets per intersection.
 
 <img width="2578" height="1728" alt="Image" src="https://github.com/user-attachments/assets/ffbd9718-0f36-40ba-9ffc-c48b67f48853" />
