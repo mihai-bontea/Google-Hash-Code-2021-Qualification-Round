@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include "Data.h"
+#include "HillClimber.h"
 #include "GeneticAlgorithm.h"
 
 int main()
@@ -25,7 +26,10 @@ int main()
         Data data(in_prefix + input_file);
 
         GeneticAlgorithm genetic_algorithm(data);
-        const auto best_schedule = genetic_algorithm.run(input_file != "a_example.in");
+        auto best_schedule = genetic_algorithm.run(input_file != "a_example.in");
+
+        HillClimber hill_climber(data);
+        hill_climber.run(best_schedule);
 
         const auto out_filename = out_prefix + input_file.substr(0, (input_file.find('.'))) + ".out";
         data.write_to_file(out_filename, best_schedule);

@@ -32,7 +32,7 @@ A basic solution in which each street that has cars passing through receives 1 s
 
 ## Solution 2
 
-A parallel **genetic algorithm** that evolves traffic light schedules. Built on top of an aggressively-optimized ScheduleEvaluator and parallelized with OpenMP across a 16-core CPU.
+A parallel **genetic algorithm** that evolves traffic light schedules. Built on top of an aggressively-optimized ScheduleEvaluator and parallelized with OpenMP across a 16-core CPU. Afterwards, on the best specimen produced, hill climbing is run to further improve the solution.
 
 ### Design choices
 
@@ -42,15 +42,15 @@ A parallel **genetic algorithm** that evolves traffic light schedules. Built on 
 * **Seeding**: 5% trivial copies (1 sec green light for all) + 20% mutated trivial + 75% random
 * **Parallelism**: offspring generation(crossover + mutation) and offspring evaluation split using **OpenMP**
 
-| Input | Solution 1 (Basic) | Solution 2 (GA) | Improvement |
+| Input | Solution 1 (Basic) | Solution 2 (GA + HC) | Improvement |
 |---|---:|---:|---:|
-| a_example | 1,001 | 2,002 | +100% |
-| b_ocean | 4,566,576 | 4,568,750 | +0.05% |
-| c_checkmate | 1,299,357 | 1,308,933 | +0.7% |
-| d_daily_commute | 1,573,100 | 1,701,721 | +8.2% |
-| e_etoile | 684,769 | 734,640 | +7.3% |
-| f_forever_jammed | 819,083 | 1,167,443 | +42.5% |
-| **Total** | **8,943,886** | **9,483,489** | **+6.0%** |
+| a_example | 1,001 | 2,002 | +100.0% |
+| b_ocean | 4,566,576 | 4,569,135 | +0.06% |
+| c_checkmate | 1,299,357 | 1,311,884 | +0.96% |
+| d_daily_commute | 1,573,100 | 1,717,265 | +9.2% |
+| e_etoile | 684,769 | 739,095 | +7.9% |
+| f_forever_jammed | 819,083 | 1,230,556 | +50.2% |
+| **Total** | **8,943,886** | **9,569,937** | **+7.0%** |
 
 ## Input file visualization
 

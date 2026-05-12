@@ -14,7 +14,8 @@ add_executable(sol2 main.cpp
         BucketQueue.h
         ScheduleEvaluator.h
         GeneticAlgorithm.h
-        MutationGenerator.h)
+        MutationGenerator.h
+        HillClimber.h)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fopenmp")
